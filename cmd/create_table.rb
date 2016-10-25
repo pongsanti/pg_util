@@ -1,3 +1,5 @@
+require_relative '../log'
+
 module Cmd
 
   class CreateTable
@@ -8,7 +10,11 @@ module Cmd
     
     attr_accessor :sql
 
+    include Log
+
     def initialize(vars)
+      info("Initializing #{self.class.name} ...")
+
       self.tablename = vars[:tablename]
       self.conn = vars[:conn]
       self.cols_hash = vars[:cols_hash]
@@ -21,14 +27,24 @@ module Cmd
       end
 
       sql_cols_string = sql_cols.join(",")
-      self.sql = "CREATE TEMPORARY TABLE #{self.tablename} (#{sql_cols_string})"
+      self.sql = %{
+        CREATE TEMPORARY TABLE #{self.tablename} (#{sql_cols_string})
+      }
+
+      info(self.sql)
+    end
+
+    def drop_if_exist
+      info ("Dropping table '#{self.tablename}'...")
+      res = self.conn.exec("DROP TABLE IF EXISTS #{self.tablename}")
+      info ("Drop table return '#{res.res_status(res.result_status)}'")
     end
 
     def execute
+      drop_if_exist
       build_sql
-      puts self.sql
       res = self.conn.exec(self.sql)
-      puts res.result_status
+      info("Executed return '#{res.res_status(res.result_status)}'")
     end
 
   end

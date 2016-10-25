@@ -1,6 +1,7 @@
 require './cmd/create_table'
 require './cmd/copy_csv'
 require './cmd/migrate'
+require './log'
 
 class Import
 
@@ -11,6 +12,8 @@ class Import
   attr_accessor :src_cols
   attr_accessor :dest_tablename
   attr_accessor :dest_cols
+
+  include Log
 
   def initialize(vars)
     self.conn = vars[:conn]
@@ -36,12 +39,15 @@ class Import
   end
 
   def execute
+    info "Creating temp table..."
     Cmd::CreateTable.new(tablename: tmp_table_name, 
       cols_hash: self.tmp_cols_hash , conn: self.conn).execute
 
+    info "Copying csv content into the temp table..."
     Cmd::CopyCsv.new(filepath: self.csv_file_path, 
       tablename: tmp_table_name, conn: self.conn).execute
 
+    info "Migrating data from temp table into the destination table..."
     Cmd::Migrate.new(conn: self.conn, 
       src_tablename: tmp_table_name, 
       src_cols: self.src_cols,

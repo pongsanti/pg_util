@@ -1,3 +1,5 @@
+require_relative '../log'
+
 module Cmd
   
   class CopyCsv
@@ -9,7 +11,11 @@ module Cmd
 
     attr_accessor :sql
 
+    include Log
+
     def initialize(vars)
+      info("Initializing #{self.class.name} ...")
+
       self.filepath = vars[:filepath]
       self.tablename = vars[:tablename]
       
@@ -20,14 +26,16 @@ module Cmd
     end
 
     def build_sql
-      self.sql = "COPY #{self.tablename} FROM '#{self.filepath}' DELIMITER ',' CSV #{self.header}"
+      self.sql = %{
+        COPY #{self.tablename} FROM '#{self.filepath}' DELIMITER ',' CSV #{self.header}
+      }
+      info(self.sql)
     end
 
     def execute
       build_sql
-      puts self.sql
       res = self.conn.exec(self.sql)
-      puts res.result_status
+      info("Executed return '#{res.res_status(res.result_status)}'")
     end
 
   end

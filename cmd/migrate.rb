@@ -1,3 +1,5 @@
+require_relative '../log'
+
 module Cmd
 
   class Migrate
@@ -10,7 +12,11 @@ module Cmd
 
     attr_accessor :sql
 
+    include Log
+
     def initialize(vars)
+      info("Initializing #{self.class.name} ...")
+
       self.src_tablename = vars[:src_tablename]
       self.src_cols = vars[:src_cols]
       self.dest_tablename = vars[:dest_tablename]
@@ -27,13 +33,14 @@ module Cmd
         SELECT #{src_cols_string}
         FROM #{self.src_tablename}
       }
+
+      info(self.sql)
     end
 
     def execute
       build_sql
-      puts self.sql
       res = self.conn.exec(self.sql)
-      puts res.result_status
+      info("Executed return '#{res.res_status(res.result_status)}'")
     end    
 
   end

@@ -19,5 +19,9 @@ module Connect
       #end
     end
 
+    def close
+      self.get.finish
+    end
+
   end
 end
